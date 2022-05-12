@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const expressJwt = require('express-jwt');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -24,6 +25,20 @@ const users = [
     },
 ];
 
+const jwtCheck = expressJwt({
+    secret: `${process.env.JWT_SECRET}`,
+});
+
+app.get('/resource', (req, res) => {
+    res.status(200).send(`Public resource, you can see this.`);
+});
+
+app.get('/resource/secret', jwtCheck, (req, res) => {
+    res.status(200).send(
+        `Secret resource, you should be logged in to see this.`
+    );
+});
+
 app.post('/login', (req, res) => {
     if (!req.body.username || !req.body.password) {
         res.status(400).send(`You need a username and password!`);
@@ -46,7 +61,7 @@ app.post('/login', (req, res) => {
             sub: user.id,
             username: user.username,
         },
-        `${(process.env.JWT_SECRET, { expiresIn: '3 hours' })}`
+        `${(jwtCheck, { expiresIn: '3 hours' })}`
     );
 
     res.status(200).send({ access_token: token });
